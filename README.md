@@ -93,6 +93,4 @@ properly. Please feel free to pull some requests!
 
 Donations can be made!
 
-DigiByte: DQ5smCNqGz1r2YrF1womnS7JPKmkES1rrp
-Ripple: rHTygsViWdjP1x1RX9i1g5ZfkZhyCMiNFL
-ReddCoin: RbgAAMuJ3MzAK4bDdXMvv1uWUGWYMp3mad
+Bitcoin: 1G1pLvQR2ebPHvJ4ojBjHZrug7heTewd32
