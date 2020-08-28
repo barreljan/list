@@ -3,7 +3,7 @@
 // And shared functions between main view and admin portal
 
 if (session_status() == PHP_SESSION_NONE) {
-        session_start();
+	session_start();
 }
 
 if (isset($debugmode) && ($debugmode == "true")) {
@@ -12,9 +12,7 @@ if (isset($debugmode) && ($debugmode == "true")) {
 	ini_set('display_errors', 'On');
 }
 
-__dbConnect__();
-
-function __dbConnect__() {
+function dbConnect() {
 	global $conn, $db_HOST, $db_USER, $db_PASS, $db_NAME;
 
 	if ($conn == false){
@@ -25,19 +23,21 @@ function __dbConnect__() {
 	}
 }
 
-function __setDefaults__() {
-        $_SESSION['show_list'] = '1';
+dbConnect();
+
+function setDefaults() {
+	$_SESSION['show_list'] = '1';
 	$_SESSION['buttonleft'] = 'gehaald';
 	$_SESSION['item'] = 'nieuwe boodschap';
 	$_SESSION['heading'] = "   <h2>Boodschappen</h2>\n   De te halen items zijn:\n   <br><br>";
 }
 
-function __logger__($msg) {
+function logger($msg) {
 	global $conn, $logenable;
 
 	if ($logenable == "true") {
 		if ($conn == false){
-			__dbConnect__();
+			dbConnect();
 		}
 		if (isset($_SESSION['username']) && isset($_SESSION['clientip'])) {
 			$authenticated = 1;
@@ -56,9 +56,9 @@ function __logger__($msg) {
 	}
 }
 
-function __dispHtmlLoginportal__() {
+function dispHtmlLoginportal() {
 	$origin = htmlentities($_SERVER['SCRIPT_NAME']);
-	__dispHtmlHeader__();
+	dispHtmlHeader();
 	echo " <div id=\"login\">";
 	echo " <br><br>\n <form name=\"form1\" method=\"post\" action=\"{$origin}\">\n";
 	echo "  <table class=\"lgouter\" >\n";
@@ -72,10 +72,10 @@ function __dispHtmlLoginportal__() {
 	echo "\t</td></tr>\n";
 	echo "  </table>\n </form>";
 	echo " </div>";
-	__dispHtmlfooter__();
+	dispHtmlfooter();
 }
 
-function __session_register__() {
+function session_register() {
 	global $conn;
 
 	session_regenerate_id();
@@ -83,85 +83,90 @@ function __session_register__() {
 	$username = mysqli_real_escape_string($conn, $_SESSION['username']);
 	$uagent = base64_encode(mysqli_real_escape_string($conn, $_SERVER['HTTP_USER_AGENT']));
 	$session_sql = "INSERT INTO `sessions` (clientip,username,sessionid,uagent,active) VALUES (\"{$_SESSION['clientip']}\",\"{$username}\",\"{$currsession_id}\",\"{$uagent}\",1)";
-	$session_result = mysqli_query($conn,$session_sql) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
-	__logger__("%INFORMAT% - User {$_SESSION['username']} logged in successfully ");
+	$session_result = mysqli_query($conn,$session_sql) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
+	logger("%INFORMAT% - User {$_SESSION['username']} logged in successfully ");
 	return;
 }
 
-function __session_logout__() {
+function session_logout() {
 	global $conn;
 
 	$currsession_id = session_id();
 	$logout_sql = "UPDATE `sessions` SET `active` = 0, `endtime` = CURRENT_TIMESTAMP WHERE `sessionid` = \"{$currsession_id}\"";
-	$logout_result = mysqli_query($conn,$logout_sql) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
-	__logger__("%INFORMAT% - User {$_SESSION['username']} logged out");
+	$logout_result = mysqli_query($conn,$logout_sql) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
+	logger("%INFORMAT% - User {$_SESSION['username']} logged out");
 	session_destroy();
 	$_SESSION = array();
 
-	__dispHtmlHeader__();
+	dispHtmlHeader();
 	echo "<br>\nUser logged out...";
-	__dispHtmlfooter__();
+	dispHtmlfooter();
 	return;
 }
 
-function __session_check__() {
+function session_check() {
 	global $conn;
 
 	$oldsession_id = session_id();
 	$username = $_SESSION['username'];
 	$check_sql = "SELECT * FROM `sessions` WHERE `sessionid` = \"{$oldsession_id}\" AND `active` = 1 AND `username` = \"{$username}\"";
-	$check_result = mysqli_query($conn,$check_sql) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
+	$check_result = mysqli_query($conn,$check_sql) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
 	if (mysqli_num_rows($check_result) == 1) {
 		// First, check if session is not hijacked
 		$sessionrow = mysqli_fetch_assoc($check_result);
 		if ($sessionrow['clientip'] != $_SERVER['REMOTE_ADDR']) {
 			if ($sessionrow['uagent'] != base64_encode($_SERVER['HTTP_USER_AGENT'])) {
 				// Oi, different IP and different browser
-				__logger__("%SECURITY% - Possible session hijacked for user {$sessionrow['username']}");
-				__dispHtmlErrorpage__("SESS_HIJACK","");
+				logger("%SECURITY% - Possible session hijacked for user {$sessionrow['username']}");
+				dispHtmlErrorpage("SESS_HIJACK","");
 				exit();
 			}
 			// Still here? Then it is a possible roaming user
 			if (isset($_SERVER['REMOTE_ADDR'])) {
-				__logger__("%INFORMAT% - User {$sessionrow['username']} is roaming ({$sessionrow['clientip']} vs {$_SERVER['REMOTE_ADDR']})");
+				logger("%INFORMAT% - User {$sessionrow['username']} is roaming ({$sessionrow['clientip']} vs {$_SERVER['REMOTE_ADDR']})");
 			}
 		}
 
 		session_regenerate_id();
 		$newsession_id = session_id();
 		$session_sql = "UPDATE `sessions` SET `sessionid` = \"{$newsession_id}\" WHERE `sessionid` = \"{$oldsession_id}\"";
-		$session_result = mysqli_query($conn,$session_sql) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
+		$session_result = mysqli_query($conn,$session_sql) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
 
 		mysqli_free_result($check_result);
 		return;
 	} else {
-		__dispHtmlErrorpage__("NO_SESSION","");
+		dispHtmlErrorpage("NO_SESSION","");
 		mysqli_free_result($check_result);
-                session_destroy();
+		session_destroy();
 		header("refresh:2;url=$page_SELF");
-                exit();
+		exit();
 	}
 }
 
-function __session_handler__() {
+function session_handler() {
 	global $conn, $db_TBLNAMEU, $page_SELF;
 
 	if (isset($_GET['action'])) {
-	        if ($_GET['action'] == 'logout') {
-			__session_logout__();
+		if ($_GET['action'] == 'logout') {
+			session_logout();
 			header("refresh:2;url=$page_SELF");
 			exit();
 		}
-	}
+	} 
+
 	if (isset($_SESSION['username']) && isset($_SESSION['clientip']) && isset($_SESSION['groupid'])) {
 		// User Authenticated
-		__session_check__();
+		session_check();
 		return;
+	} elseif (!empty($_GET)) {
+		// Invalid input or someone trying to try RFI stuff
+		header("HTTP/1.0 404 Not Found");
+		exit("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>\n</head><body>\n<h1>Not Found</h1>\n<p>The requested URL was not found on this server.</p>\n</body></html>\n");
 	} elseif (isset($_POST['DOLOGIN'])) {
 		$myusername = mysqli_real_escape_string($conn, $_POST['myusername']);
 		$mypassword = mysqli_real_escape_string($conn, $_POST['mypassword']);
 		$sql="SELECT * FROM `{$db_TBLNAMEU}` WHERE `username` = ('$myusername')";
-		$result = mysqli_query($conn,$sql) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
+		$result = mysqli_query($conn,$sql) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
 		$userrow = mysqli_fetch_assoc($result);
 		$password = $userrow['password'];
 		$count = mysqli_num_rows($result);
@@ -173,42 +178,44 @@ function __session_handler__() {
 			$_SESSION['admin'] = $userrow['admin'];
 			$_SESSION['clientip'] = $_SERVER['REMOTE_ADDR'];
 			$_SESSION['agent'] = $_SERVER['HTTP_USER_AGENT'];
-			__session_register__();
-			__setDefaults__();
+			session_register();
+			setDefaults();
 			header("Location: $page_SELF");
 			exit();
 		} elseif ($count != 1) {
-			__logger__("%AUTHFAIL% - Wrong Username: {$myusername}");
-			__dispHtmlErrorpage__("NO_AUTH","");
+			logger("%AUTHFAIL% - Wrong Username: {$myusername}");
+			dispHtmlErrorpage("NO_AUTH","");
 			header("refresh:2;url=$page_SELF");
 			exit();
 		} elseif (($count = 1) && (password_verify($mypassword, $password) == false)) {
-			__logger__("%AUTHFAIL% - Wrong Password for user: {$myusername}");
-			__dispHtmlErrorpage__("NO_AUTH","");
+			logger("%AUTHFAIL% - Wrong Password for user: {$myusername}");
+			dispHtmlErrorpage("NO_AUTH","");
 			header("refresh:2;url=$page_SELF");
 			exit();
 		} else {
-			__logger__("%AUTHFAIL% - Invalid login: {$myusername}");
-			__dispHtmlErrorpage__("NO_AUTH","");
+			logger("%AUTHFAIL% - Invalid login: {$myusername}");
+			dispHtmlErrorpage("NO_AUTH","");
 			header("refresh:2;url=$page_SELF");
 			exit();
 		}
 	} else {
-		__dispHtmlLoginportal__();
+		dispHtmlLoginportal();
 		exit();
 	}
 }
 
-function __dispHtmlHeader__() {
+function dispHtmlHeader() {
+	global $version;
+
 	echo "<!DOCTYPE HTML>\n";
 	echo "<html>\n <head>\n  <title>Dingen lijst</title>\n  <link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"./style.css\">";
 	echo "\n  <meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\">";
 	echo "\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1\">";
 	echo "\n  <meta name=\"copyright\" content=\"Copyright 2015-2017, bartjan@pc-mania.nl\">";
-	echo "\n  <meta name=\"version\" content=\"v1.5\">\n </head>\n<body>\n";
+	echo "\n  <meta name=\"version\" content=\"v{$version}\">\n </head>\n<body>\n";
 }
 
-function __dispHtmlfooter__() {
+function dispHtmlfooter() {
 	global $conn;
 
 	if ($conn == true){
@@ -217,9 +224,9 @@ function __dispHtmlfooter__() {
 	echo "\n </body>\n</html>";
 }
 
-function __dispHtmlErrorpage__($error,$issue) {
+function dispHtmlErrorpage($error,$issue) {
 
-	__dispHtmlHeader__();
+	dispHtmlHeader();
 	if ($error == "NO_ITEM") {
 		echo "   <br>\n   Lege invoer...\n   <br><br>\n   <a href=\".\">Ga terug</a>";
 	} if ($error == "NO_ID") {
@@ -248,9 +255,9 @@ function __dispHtmlErrorpage__($error,$issue) {
 		$msg .= "Violation time: ".date("Y-m-d H:i:s")."\n\n";
 		$msg .= "Offender: {$_SERVER['REMOTE_ADDR']} \nUseragent: {$_SERVER['HTTP_USER_AGENT']} \nOrigin: {$_SERVER['PHP_SELF']}\n\n";
 		$msg .= "Original session details:\n";
-                foreach ($_SESSION as $key=>$val) {
-                    $msg .= $key." = ".$val."\n";
-                }
+		foreach ($_SESSION as $key=>$val) {
+		    $msg .= $key." = ".$val."\n";
+		}
 		$msg .= "\n\n\nTake actions asap!";
 		$headers = array();
 		$headers[] = "MIME-Version: 1.0";
@@ -264,5 +271,5 @@ function __dispHtmlErrorpage__($error,$issue) {
 	} if ($error == "NO_SESSION") {
 		echo "   <br>\n   Oeps, je moet opnieuw inloggen, er is geen actieve sessie hier...";
 	}
-	__dispHtmlfooter__();
+	dispHtmlfooter();
 }

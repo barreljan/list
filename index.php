@@ -1,79 +1,92 @@
 <?php
-// Alle dingen lijst v1.5
+// Alle dingen lijst
 // Credits: bartjan@pc-mania.nl
 
 include './config.php';
 include './functions.php';
 
-__session_handler__();
+session_handler();
 
-// List Switching
-if (isset($_GET) && isset($_GET['cl']))  {
-	if ($_GET['cl'] == 1) {
-                $_SESSION['show_list'] = '1';
-                $_SESSION['buttonleft'] = 'gehaald';
-                $_SESSION['item'] = 'nieuwe boodschap';
-		$_SESSION['heading'] = "   <h2>Boodschappen</h2>\n   De te halen items zijn:\n   <br><br>";
-	} elseif ($_GET['cl'] == 2) {
-                $_SESSION['show_list'] = '2';
-                $_SESSION['buttonleft'] = 'bezocht';
-                $_SESSION['item'] = 'nieuw dagje uit';
-		$_SESSION['heading'] = "   <h2>Dagje weg</h2>\n   De te bezoeken plaatsen zijn:\n   <br><br>";
-	} elseif ($_GET['cl'] == 3) {
-                $_SESSION['show_list'] = '3';
-                $_SESSION['buttonleft'] = 'gekeken';
-                $_SESSION['item'] = 'nieuwe te kijken film';
-		$_SESSION['heading'] = "   <h2>Films</h2>\n   De te bekijken films zijn:\n   <br><br>";
-	} elseif ($_GET['cl'] == 4) {
-                $_SESSION['show_list'] = '4';
-                $_SESSION['buttonleft'] = 'gedaan';
-                $_SESSION['item'] = 'nieuwe uit te voeren klus';
-		$_SESSION['heading'] = "   <h2>Klusjes</h2>\n   De uit te voeren klusjes zijn:\n   <br><br>";
-	} else {
-                $_SESSION['show_list'] = '1';
-                $_SESSION['buttonleft'] = 'gehaald';
-                $_SESSION['item'] = 'nieuwe boodschap';
-		$_SESSION['heading'] = "   <h2>Boodschappen</h2>\n   De te halen items zijn:\n   <br><br>";
+if (isset($_GET)) {
+	if (isset($_GET['cl']))  {
+		// List Switching
+		if ($_GET['cl'] == 1) {
+			$_SESSION['show_list'] = '1';
+			$_SESSION['buttonleft'] = 'gehaald';
+			$_SESSION['item'] = 'nieuwe boodschap';
+			$_SESSION['heading'] = "   <h2>Boodschappen</h2>\n   De te halen items zijn:\n   <br><br>";
+		} elseif ($_GET['cl'] == 2) {
+			$_SESSION['show_list'] = '2';
+			$_SESSION['buttonleft'] = 'bezocht';
+			$_SESSION['item'] = 'nieuw dagje uit';
+			$_SESSION['heading'] = "   <h2>Dagje weg</h2>\n   De te bezoeken plaatsen zijn:\n   <br><br>";
+		} elseif ($_GET['cl'] == 3) {
+			$_SESSION['show_list'] = '3';
+			$_SESSION['buttonleft'] = 'gekeken';
+			$_SESSION['item'] = 'nieuwe te kijken film';
+			$_SESSION['heading'] = "   <h2>Films</h2>\n   De te bekijken films zijn:\n   <br><br>";
+		} elseif ($_GET['cl'] == 4) {
+			$_SESSION['show_list'] = '4';
+			$_SESSION['buttonleft'] = 'gedaan';
+			$_SESSION['item'] = 'nieuwe uit te voeren klus';
+			$_SESSION['heading'] = "   <h2>Klusjes</h2>\n   De uit te voeren klusjes zijn:\n   <br><br>";
+		} else {
+			$_SESSION['show_list'] = '1';
+			$_SESSION['buttonleft'] = 'gehaald';
+			$_SESSION['item'] = 'nieuwe boodschap';
+			$_SESSION['heading'] = "   <h2>Boodschappen</h2>\n   De te halen items zijn:\n   <br><br>";
+		}
+		header("Location: $page_SELF");
+	} elseif (isset($_GET['action'])) {
+		// Modify or delete item
+		if (empty($_GET['id'])) {
+			dispHtmlErrorpage("NO_ID","");
+			exit();
+		} elseif ($_GET['action'] == 'delete') {
+			$id=$_GET['id'];
+			// Deletion of item
+			$query = "UPDATE `{$db_TBLNAME}` SET `active` = '0', `datedeleted` = CURRENT_TIMESTAMP, `deletedby` = \"{$_SESSION['username']}\" WHERE `id` = {$id} AND `groupid` = {$_SESSION['groupid']}";
+			mysqli_query($conn,$query) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
+			header("Location: $page_SELF");
+		} elseif ($_GET['action'] == 'ordered') {
+			$id=$_GET['id'];
+			// Marking of ordered item
+			$query = "UPDATE `{$db_TBLNAME}` SET `ordered` = '1', `datemodified` = CURRENT_TIMESTAMP, `changedby` = \"{$_SESSION['username']}\" WHERE `id` = {$id} AND `groupid` = {$_SESSION['groupid']}";
+			mysqli_query($conn,$query) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
+			header("Location: $page_SELF");
+		} else {
+			header("Location: $page_SELF");
+		}
+	} elseif (!empty($_GET)) {
+		// Invalid input or someone trying to try RFI stuff
+		header("HTTP/1.0 404 Not Found");
+		exit("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>\n</head><body>\n<h1>Not Found</h1>\n<p>The requested URL was not found on this server.</p>\n</body></html>\n");
 	}
-	header("Location: $page_SELF");
 }
 
-// Add new item to DB
-if (isset($_POST['ADD'])) {
-	if ($_POST['ITEM'] == "" || $_POST['ITEM'] == NULL || $_SESSION['username'] == "") {
-		__dispHtmlErrorpage__("NO_ITEM","");
-		exit();
-	} else {
-		$item = mysqli_real_escape_string($conn, $_POST['ITEM']); 
-		$query = "INSERT INTO `{$db_TBLNAME}` (item,datedeleted,owner,list,emailout,groupid) VALUES (\"{$item}\",NULL,\"{$_SESSION['username']}\",{$_SESSION['show_list']},0,{$_SESSION['groupid']})";
-		mysqli_query($conn,$query) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
-		header("Location: $page_SELF");
+if (isset($_POST)) {
+	// Add new item to DB
+	if (isset($_POST['ADD'])) {
+		if ($_POST['ITEM'] == "" || $_POST['ITEM'] == NULL || $_SESSION['username'] == "") {
+			dispHtmlErrorpage("NO_ITEM","");
+			exit();
+		} else {
+			$item = mysqli_real_escape_string($conn, $_POST['ITEM']); 
+			$query = "INSERT INTO `{$db_TBLNAME}` (item,datedeleted,owner,list,emailout,groupid) VALUES (\"{$item}\",NULL,\"{$_SESSION['username']}\",{$_SESSION['show_list']},0,{$_SESSION['groupid']})";
+			mysqli_query($conn,$query) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
+			header("Location: $page_SELF");
+		}
+	} elseif (!empty($_POST)) {
+		// Invalid input or someone trying to try RFI stuff
+		header("HTTP/1.0 404 Not Found");
+		exit("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>\n</head><body>\n<h1>Not Found</h1>\n<p>The requested URL was not found on this server.</p>\n</body></html>\n");
 	}
+
 }
-// Modify or delete item
-if (isset($_GET['action'])) {
-	if (isset($_GET['action']) && empty($_GET['id'])) {
-		__dispHtmlErrorpage__("NO_ID","");
-		exit();
-	} elseif ($_GET['action'] == 'delete') {
-		$id=$_GET['id'];
-		// Deletion of item
-		$query = "UPDATE `{$db_TBLNAME}` SET `active` = '0', `datedeleted` = CURRENT_TIMESTAMP, `deletedby` = \"{$_SESSION['username']}\" WHERE `id` = {$id} AND `groupid` = {$_SESSION['groupid']}";
-		mysqli_query($conn,$query) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
-		header("Location: $page_SELF");
-	} elseif ($_GET['action'] == 'ordered') {
-		$id=$_GET['id'];
-		// Marking of ordered item
-		$query = "UPDATE `{$db_TBLNAME}` SET `ordered` = '1', `datemodified` = CURRENT_TIMESTAMP, `changedby` = \"{$_SESSION['username']}\" WHERE `id` = {$id} AND `groupid` = {$_SESSION['groupid']}";
-		mysqli_query($conn,$query) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
-		header("Location: $page_SELF");
-	} else {
-		header("Location: $page_SELF");
-	}
-}
+
 
 // Build of mainpage from here
-__dispHtmlHeader__();
+dispHtmlHeader();
 echo " <div id=\"page\">\n";
 if ($_SESSION['show_list'] == "1" ) {
 	echo "   <h4>boodschappen | <a href=\"{$page_SELF}index.php?cl=2\" class=header>dagje weg</a> | <a href=\"{$page_SELF}index.php?cl=3\" class=header>films</a> | <a href=\"{$page_SELF}index.php?cl=4\" class=header>klus</a> |";
@@ -95,7 +108,7 @@ echo $_SESSION['heading'];
 
 // Get current items on active list from DB
 $query = "SELECT * FROM `{$db_TBLNAME}` WHERE `active` = 1 AND `list` = {$_SESSION['show_list']} AND `groupid` = {$_SESSION['groupid']} ORDER BY `id`";
-$items_result = mysqli_query($conn,$query) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
+$items_result = mysqli_query($conn,$query) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
 echo "\n   <table>";
 while ($row = mysqli_fetch_assoc($items_result)){
 	if ($row['ordered'] == 1) {
@@ -120,4 +133,4 @@ echo "\n </div>";
 if (isset($debugmode) && ($debugmode == "true")) {
 	echo "This page was generated in ".(number_format(microtime(true) - $start_time, 5)). " seconds";
 }
-__dispHtmlfooter__();
+dispHtmlfooter();

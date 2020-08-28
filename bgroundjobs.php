@@ -1,7 +1,7 @@
 <?php
 include '/var/www/html/lijst/config.php';
 include '/var/www/html/lijst/functions.php';
-__dbConnect__();
+dbConnect();
 
 
 // Garbage cleaner for stale sessions (30min idle)
@@ -21,7 +21,7 @@ __dbConnect__();
 		}
 		$updatesql = "UPDATE `sessions` SET `active` = 0 WHERE `starttime` < (NOW() - INTERVAL 30 MINUTE)";
 		$update = mysqli_query($conn,$updatesql) or die;
-		__logger__("%CRON_JOB% - Stale sessions cleaned for ID(s) {$ids}");
+		logger("%CRON_JOB% - Stale sessions cleaned for ID(s) {$ids}");
 	}
 	mysqli_free_result($stalesessions);
 
@@ -57,7 +57,7 @@ __dbConnect__();
 			// Update the new items that an email has been sent
 			$query = "UPDATE {$db_TBLNAME} SET `emailout` = 1 WHERE `emailout` = 0";
 			mysqli_query($conn, $query) or die ("query error");
-			__logger__("%CRON_JOB% - Update sent to email for group {$receprow['groupid']} ({$receprow['recepients']})");
+			logger("%CRON_JOB% - Update sent to email for group {$receprow['groupid']} ({$receprow['recepients']})");
 		}
 	}
 	mysqli_free_result($email_recepients);

@@ -5,39 +5,39 @@
 include './config.php';
 include './functions.php';
 
-__session_handler__();
+session_handler();
 
 if ($_SESSION['admin'] != 1){
-	__dispHtmlErrorpage__("NO_RIGHTS","");
+	dispHtmlErrorpage("NO_RIGHTS","");
 	exit();
 }
 
 // Build of mainpage from here
-__dispHtmlHeader__();
+dispHtmlHeader();
 
 // Add new item to DB
 if (isset($_POST['ADDUSER'])) {
 	if ($_POST['iUSER'] == "" || $_POST['iUSER'] == NULL || $_SESSION['username'] == "" || $_POST['iEMAIL'] == "" || $_POST['iEMAIL'] == NULL || $_POST['iGROUP'] == 0) {
-		__dispHtmlErrorpage__("NO_ITEM","");
+		dispHtmlErrorpage("NO_ITEM","");
 		exit();
 	} else {
 		$user = mysqli_real_escape_string($conn, $_POST['iUSER']); 
 		$email = mysqli_real_escape_string($conn, $_POST['iEMAIL']);
 		$query = "INSERT INTO `{$db_TBLNAMEU}` (username,emailadres,groupid,active) VALUES (\"{$user}\",\"{$email}\",\"{$_POST['iGROUP']}\",\"1\")";
-		mysqli_query($conn,$query) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
+		mysqli_query($conn,$query) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
 		header("Location: $page_ADMIN");
 	}
 }
 if (isset($_POST['CHANGEUSER'])) {
 	if ($_POST['iUSER'] == "" || $_POST['iUSER'] == NULL || $_SESSION['username'] == "" || $_POST['iEMAIL'] == "" || $_POST['iEMAIL'] == NULL || $_POST['iGROUP'] == 0) {
-		__dispHtmlErrorpage__("NO_ITEM","");
+		dispHtmlErrorpage("NO_ITEM","");
 		exit();
 	} else {
 		$user = mysqli_real_escape_string($conn, $_POST['iUSER']); 
 		$email = mysqli_real_escape_string($conn, $_POST['iEMAIL']);
 		$password = mysqli_real_escape_string($conn, $_POST['iPASS']);
 		if (strlen($password) < 7 || strlen($password) == 7) {
-			__dispHtmlErrorpage__("SHORTPASS","");
+			dispHtmlErrorpage("SHORTPASS","");
 			exit();
 		}
 		$options = ['cost' => 12];
@@ -47,30 +47,30 @@ if (isset($_POST['CHANGEUSER'])) {
 		} else {
 			$query = "UPDATE `{$db_TBLNAMEU}` SET `username` = \"{$_POST['iUSER']}\",`password` = \"{$encrpass}\",`emailadres` = \"{$_POST['iEMAIL']}\",`groupid` = \"{$_POST['iGROUP']}\" WHERE `id` = {$_POST['USRID']}";
 		}
-		mysqli_query($conn,$query) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
+		mysqli_query($conn,$query) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
 		header("Location: $page_ADMIN");
 	}
 }
 if (isset($_POST['CHANGEGROUP'])) {
 	if ($_POST['iGRP'] == "" || $_POST['iGRP'] == NULL || $_SESSION['username'] == "") {
-		__dispHtmlErrorpage__("NO_ITEM","");
+		dispHtmlErrorpage("NO_ITEM","");
 		exit();
 	} else {
 		$user = mysqli_real_escape_string($conn, $_POST['iGRP']); 
 		$query = "UPDATE `{$db_TBLNAMEG}` SET `groupname` = \"{$_POST['iGRP']}\" WHERE `groupid` = \"{$_POST['GRPID']}\"";
 		echo $query;
-		mysqli_query($conn,$query) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
+		mysqli_query($conn,$query) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
 		header("Location: $page_ADMIN");
 	}
 }
 if (isset($_POST['ADDGROUP'])) {
 	if ($_POST['iGROUP'] == "" || $_POST['iGROUP'] == NULL || $_SESSION['username'] == "") {
-		__dispHtmlErrorpage__("NO_ITEM","");
+		dispHtmlErrorpage("NO_ITEM","");
 		exit();
 	} else {
 		$group = mysqli_real_escape_string($conn, $_POST['iGROUP']); 
 		$query = "INSERT INTO `{$db_TBLNAMEG}` (groupname,active) VALUES (\"{$group}\",\"1\")";
-		mysqli_query($conn,$query) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
+		mysqli_query($conn,$query) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
 		header("Location: $page_ADMIN");
 	}
 }
@@ -78,30 +78,30 @@ if (isset($_POST['ADDGROUP'])) {
 // Modify or delete item
 if (isset($_GET['action'])) {
 	if (empty($_GET['id'])) {
-		__dispHtmlErrorpage__("NO_ID","");
+		dispHtmlErrorpage("NO_ID","");
 		exit();
 	} else {
 		$id=$_GET['id'];
 		if ($_GET['action'] == 'deleteusr') {
 			$query = "UPDATE `{$db_TBLNAMEU}` SET `active` = '0' WHERE `id` = {$id}";
-			mysqli_query($conn,$query) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
+			mysqli_query($conn,$query) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
 			header("Location: $page_ADMIN");
 		}
 		if ($_GET['action'] == 'deletegrp') {
 			$query = "SELECT * from `{$db_TBLNAMEU}` WHERE `groupid` = {$id}";
-			$grp_result = mysqli_query($conn,$query) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
+			$grp_result = mysqli_query($conn,$query) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
 			if (!mysqli_num_rows($grp_result) == 0) {
-				__dispHtmlErrorpage__("GROUP_NOTEMPTY","");
+				dispHtmlErrorpage("GROUP_NOTEMPTY","");
 				exit();
 			} elseif (mysqli_num_rows($grp_result) == 0) {
 				$query = "UPDATE `{$db_TBLNAMEG}` SET `active` = '0' WHERE `groupid` = {$id}";
-				mysqli_query($conn,$query) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
+				mysqli_query($conn,$query) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
 				header("Location: $page_ADMIN");
 			}
 		}
 		if (($_GET['action'] == 'changeusr')) {
 			$query = "SELECT id,username,password,emailadres,groupid FROM `{$db_TBLNAMEU}` WHERE `id` = {$id}";
-			$usr_result = mysqli_query($conn,$query) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
+			$usr_result = mysqli_query($conn,$query) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
 			if (mysqli_num_rows($usr_result) == 0) {
 				header("Location: $page_ADMIN");
 			}
@@ -116,7 +116,7 @@ if (isset($_GET['action'])) {
  		}
 		if ($_GET['action'] == 'changegrp') {
 			$query = "SELECT groupid,groupname from `{$db_TBLNAMEG}` WHERE `groupid` = {$id}";
-			$grp_result = mysqli_query($conn,$query) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
+			$grp_result = mysqli_query($conn,$query) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
 			if (mysqli_num_rows($grp_result) == 0) {
 				header("Location: $page_ADMIN");
 			}
@@ -137,7 +137,7 @@ echo "\n   <tr><th>Name</th><th>Emailadres</th><th>Group</th><th></th><th></th><
 
 // Get Users
 $query = "SELECT * FROM `users` WHERE `active` = \"1\" "; //ORDER BY `groupid`";
-$items_result = mysqli_query($conn,$query) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
+$items_result = mysqli_query($conn,$query) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
 
 while ($usrsrow = mysqli_fetch_assoc($items_result)){
 	echo "\n   <tr>\n     <td class=\"admin\" width=\"200px\">{$usrsrow["username"]}</td>\n";
@@ -155,7 +155,7 @@ echo "\n   <tr><th>Groupname</th><th>Group</th><th></th><th></th></tr>\n";
 
 // Get Groups
 $query = "SELECT * FROM `groups` WHERE `active` = \"1\" ORDER BY `groupid`";
-$items_result = mysqli_query($conn,$query) or die (__dispHtmlErrorpage__("QUERY_ERR",mysqli_error($conn)));
+$items_result = mysqli_query($conn,$query) or die (dispHtmlErrorpage("QUERY_ERR",mysqli_error($conn)));
 $grouplist = "<select name=\"iGROUP\"><option value=\"0\">Selecteer groep</option>\n";
 while ($grprow = mysqli_fetch_assoc($items_result)){
 	echo "\n   <tr>\n     <td class=\"admin\" width=\"200px\">{$grprow["groupname"]}</td>\n";
@@ -225,6 +225,6 @@ echo "</div>";
 if (isset($debugmode) && ($debugmode == "true")) {
 	echo "This page was generated in ".(number_format(microtime(true) - $start_time, 5)). " seconds";
 }
-__dispHtmlfooter__();
+dispHtmlfooter();
 ?>
 
