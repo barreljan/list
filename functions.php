@@ -8,7 +8,7 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-if (isset($debugmode) && ($debugmode == "true")) {
+if ($debugmode) {
     $start_time = microtime(true);
     error_reporting(-1);
     ini_set('display_errors', 'On');
@@ -35,7 +35,7 @@ function logger($msg)
 {
     global $conn, $logenable;
 
-    if ($logenable == "true") {
+    if ($logenable) {
         if (isset($_SESSION['username']) && isset($_SESSION['clientip'])) {
             $authenticated = 1;
         } else {
@@ -234,7 +234,7 @@ function dispHtmlfooter()
     if (isset($conn)) {
         $conn->close();
     }
-    if (isset($debugmode) && ($debugmode == "true")) {
+    if ($debugmode) {
         echo "This page was generated in " . (number_format(microtime(true) - $start_time, 5)) . " seconds";
     }
     echo "\n </body>\n</html>";
@@ -253,13 +253,13 @@ function dispHtmlErrorpage($error, $issue)
     }
     if ($error == "NO_DBCONN") {
         echo "   <br>\n   Failed to connect to MySQL<br><br>\nContact the webmaster<br>";
-        if (isset($debugmode) && ($debugmode == "true")) {
+        if ($debugmode) {
             echo "\n$issue\n";
         }
     }
     if ($error == "QUERY_ERR") {
         echo "   <br>\n   Failed to query MySQL<br><br>\nContact the webmaster<br>";
-        if (isset($debugmode) && ($debugmode == "true")) {
+        if ($debugmode) {
             echo "\n$issue";
         }
     }
