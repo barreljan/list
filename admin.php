@@ -43,7 +43,7 @@ if (isset($_POST['CHANGEUSER'])) {
         $options = ['cost' => 12];
         $encrpass = password_hash($password, PASSWORD_BCRYPT, $options);
         $q = $conn->prepare("UPDATE `{$db_TBLNAMEU}` SET `username` = ?, `password` = ?, `emailadres` = ?, `groupid` = ? WHERE `id` = ?");
-        $q->bind_param('sssii', $user, $password, $email, $_POST['iGROUP'], $_POST['USRID']);
+        $q->bind_param('sssii', $user, $encrpass, $email, $_POST['iGROUP'], $_POST['USRID']);
         $q->execute();
         header("Location: $page_ADMIN");
     }
@@ -110,13 +110,9 @@ if (isset($_GET['action']) && empty($_GET['id'])) {
             header("Location: $page_ADMIN");
         } elseif ($result->num_rows == 1) {
             $userrow = $result->fetch_assoc();
-            $inputfldusr = "<input type=\"text\" name=\"iUSER\" length=\"100\" size=\"53\" value=\"{$userrow['username']}\"><br>\n";
-            $inputfldemail = "<input type=\"text\" name=\"iEMAIL\" length=\"100\" size=\"53\" value=\"{$userrow['emailadres']}\"><br>\n";
-            if ($userrow['password'] == "") {
-                $inputfldpass = "<input type=\"password\" name=\"iPASS\" length=\"100\" size=\"53\" value=\"\"><br>\n";
-            } elseif (strlen($userrow['emailadres']) > 2) {
-                $inputfldpass = "<input type=\"password\" name=\"iPASS\" length=\"100\" size=\"53\" value=\"blankpassword\"><br>\n";
-            }
+            $inputfldusr = "Username:<input type=\"text\" name=\"iUSER\" length=\"100\" size=\"53\" value=\"{$userrow['username']}\"><br>\n";
+            $inputfldemail = "Email:<input type=\"text\" name=\"iEMAIL\" length=\"100\" size=\"53\" value=\"{$userrow['emailadres']}\"><br>\n";
+            $inputfldpass = "Password:<input type=\"password\" name=\"iPASS\" length=\"100\" size=\"53\" value=\"\"><br>\n";
         }
         $result->free_result();
     }
@@ -168,7 +164,7 @@ $q = $conn->prepare("SELECT * FROM `groups` WHERE `active` = 1 ORDER BY `groupid
 $q->execute();
 $result = $q->get_result();
 
-$grouplist = "<select name=\"iGROUP\"><option value=\"0\">Selecteer groep</option>\n";
+$grouplist = "Group:<br>\n<select name=\"iGROUP\"><option value=\"0\">Selecteer groep</option>\n";
 while ($grprow = $result->fetch_assoc()) {
     echo "\n   <tr>\n     <td class=\"admin\" width=\"200px\">{$grprow["groupname"]}</td>\n";
     echo "     <td class=\"admin\" width=\"200px\">{$grprow["groupid"]}</td>\n";
@@ -193,15 +189,15 @@ echo "\n   </table>";
 // Make User form
 echo "\n   <form action=\"{$page_ADMIN}\" method=\"post\" name=\"USER\">";
 if (!isset($inputfldusr) || $inputfldusr == "" || $inputfldusr == NULL) {
-    echo "\n     <br><br><br>\n\t Voer een nieuwe user in:<br>";
-    echo "\n\t<input type=\"text\" name=\"iUSER\" length=\"100\" size=\"53\">\n";
+    echo "\n     <br><br><br>\n\t <b>Voer een nieuwe user in</b><br>";
+    echo "\n\tUser: <input type=\"text\" name=\"iUSER\" length=\"100\" size=\"53\">\n";
 } else {
-    echo "\n     <br><br><br>\n\t Update de onderstaande user:<br>";
+    echo "\n     <br><br><br>\n\t <b>Update de onderstaande user:</b><br>";
     echo $inputfldusr;
     echo $inputfldpass;
 }
 if (!isset($inputfldemail) || $inputfldemail == "" || $inputfldemail == NULL) {
-    echo "\t<input type=\"text\" name=\"iEMAIL\" length=\"100\" size=\"53\"><br>\n";
+    echo "\tEmail<input type=\"text\" name=\"iEMAIL\" length=\"100\" size=\"53\"><br>\n";
 } else {
     echo $inputfldemail;
 }
