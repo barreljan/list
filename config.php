@@ -1,6 +1,6 @@
 <?php
 
-$version = "1.6";
+$version = "1.7";
 
 // Prevents javascript XSS attacks aimed to steal the session ID,
 // Adds entropy into the randomization of the session ID, as PHP's random number
@@ -15,7 +15,7 @@ ini_set('session.use_only_cookies', 1);
 $db_NAME = "webroot";
 $db_USER = "webroot";
 $db_PASS = "dAppnqNbJghBLWSI";
-$db_HOST = "localhost";
+$db_HOST = "127.0.0.1";
 $db_TBLNAME = "lijst";
 $db_TBLNAMEU = "users";
 $db_TBLNAMEG = "groups";
@@ -23,10 +23,8 @@ $db_TBLNAMEG = "groups";
 $page_SELF = "https://uxx-002.pc-mania.nl/lijst/";
 $page_ADMIN = "{$page_SELF}admin.php";
 
-$logenable = "true";
-$debugmode = "false";
+$logenable = true;
+$debugmode = false;
 // Override the default above
-//$logenable = "false";
-//$debugmode = "true";
-
-?>
+// $logenable = true;
+// $debugmode = true;
