@@ -98,7 +98,9 @@ function session_logout()
     $q->execute();
     $q->close();
 
-    logger("%INFORMAT% - User {$_SESSION['username']} logged out");
+    if (isset($_SESSION['username'])) {
+        logger("%INFORMAT% - User {$_SESSION['username']} logged out");
+    }
     session_destroy();
     $_SESSION = array();
 
@@ -177,29 +179,31 @@ function session_handler()
 
         $result = $q->get_result();
         $userrow = $result->fetch_assoc();
-        $password = $userrow['password'];
         $count = $result->num_rows;
 
         $result->free_result();
 
         // If result matched $myusername and $mypassword, table row must be 1 row and password be verified
-        if (($count == 1) && (password_verify($mypassword, $password))) {
-            $_SESSION['username'] = $myusername;
-            $_SESSION['groupid'] = $userrow['groupid'];
-            $_SESSION['admin'] = $userrow['admin'];
-            $_SESSION['clientip'] = $_SERVER['REMOTE_ADDR'];
-            $_SESSION['agent'] = $_SERVER['HTTP_USER_AGENT'];
-            session_register();
-            setDefaults();
-            header("Location: $page_SELF");
-            exit();
+        if ($count == 1) {
+            $password = $userrow['password'];
+            if (password_verify($mypassword, $password)) {
+                $_SESSION['username'] = $myusername;
+                $_SESSION['groupid'] = $userrow['groupid'];
+                $_SESSION['admin'] = $userrow['admin'];
+                $_SESSION['clientip'] = $_SERVER['REMOTE_ADDR'];
+                $_SESSION['agent'] = $_SERVER['HTTP_USER_AGENT'];
+                session_register();
+                setDefaults();
+                header("Location: $page_SELF");
+                exit();
+            } elseif (password_verify($mypassword, $password) == false) {
+                logger("%AUTHFAIL% - Wrong Password for user: {$myusername}");
+                dispHtmlErrorpage("NO_AUTH", "");
+                header("refresh:2;url=$page_SELF");
+                exit();
+            }
         } elseif ($count != 1) {
             logger("%AUTHFAIL% - Wrong Username: {$myusername}");
-            dispHtmlErrorpage("NO_AUTH", "");
-            header("refresh:2;url=$page_SELF");
-            exit();
-        } elseif (($count = 1) && (password_verify($mypassword, $password) == false)) {
-            logger("%AUTHFAIL% - Wrong Password for user: {$myusername}");
             dispHtmlErrorpage("NO_AUTH", "");
             header("refresh:2;url=$page_SELF");
             exit();
