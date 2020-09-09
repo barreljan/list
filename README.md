@@ -27,7 +27,7 @@ Disclamer:
 - PHP 5.6 or higher
 - mysqli/mysqlnd
 - MySQL 5.5 or higher
-- Apache2
+- Any http daemon
 
 
 ### Setting up
@@ -76,10 +76,16 @@ To set the email part to work add this to your crontab:
 
 Things to correct to your situation:
 
+config.php
+
+    - set the database credentials
+    - set $page_SELF to your website
 functions.php
+
 	function __dispHtmlErrorpage__
 	- set the email headers and sender correctly
 bgroundjobs.php
+
 	- set the email headers and sender correctly
 	
 
