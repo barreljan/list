@@ -1,6 +1,6 @@
 <?php
 
-$version = "1.7";
+$version = "1.7.2";
 
 // Prevents javascript XSS attacks aimed to steal the session ID,
 // Adds entropy into the randomization of the session ID, as PHP's random number
