@@ -294,7 +294,7 @@ function dispHtmlErrorpage($error, $issue)
         $headers[] = "From: Uxx-001 webserver <{$from}>";
         $headers[] = "Reply-To: No-Reply <{$from}>";
         $headers[] = "X-Mailer: PHP/" . phpversion();
-        mail("bartjan@h-p-c.nl", $subject, $msg, implode("\r\n", $headers), "-f {$from}");
+        mail("bartjan@pc-mania.nl", $subject, $msg, implode("\r\n", $headers), "-f {$from}");
     }
     if ($error == "SHORTPASS") {
         echo "   <br>\n   Password te kort, minimaal 8 karakters graag!";
