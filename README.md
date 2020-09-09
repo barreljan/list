@@ -82,7 +82,7 @@ config.php
     - set $page_SELF to your website
 functions.php
 
-	function __dispHtmlErrorpage__
+	function dispHtmlErrorpage
 	- set the email headers and sender correctly
 bgroundjobs.php
 
