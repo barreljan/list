@@ -73,7 +73,7 @@ if (isset($_POST)) {
             dispHtmlErrorpage("NO_ITEM", "");
             exit();
         } else {
-            $item = mysqli_real_escape_string($conn, $_POST['ITEM']);
+            $item = $_POST['ITEM'];
             $q = $conn->prepare("INSERT INTO `{$db_TBLNAME}` (item,datedeleted,owner,list,emailout,groupid) VALUES (?,NULL,?,?,0,?)");
             $q->bind_param('ssii', $item, $_SESSION['username'], $_SESSION['show_list'], $_SESSION['groupid']);
             $q->execute();
